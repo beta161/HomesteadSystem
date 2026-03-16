@@ -26,7 +26,7 @@ public class ApprovalTimer {
         this.createTime = createTime;
     }
 
-    //常用，初始化审批时用
+    //常用，初始化审批时用 
 
     public ApprovalTimer(Integer appId, String approvalLevel, Date startTime, Date deadline, Integer isOverdue, String remindStatus) {
         this.appId = appId;

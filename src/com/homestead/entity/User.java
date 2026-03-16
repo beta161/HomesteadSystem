@@ -13,13 +13,13 @@ public class User {
     public User() {
     }
 
-    public User(Integer user_id, String username, String password, String role, String phone, Date create_time) {
-        this.userId = user_id;
+    public User(Integer userId, String username, String password, String role, String phone, Date createTime) {
+        this.userId = userId;
         this.username = username;
         this.password = password;
         this.role = role;
         this.phone = phone;
-        this.createTime = create_time;
+        this.createTime = createTime;
     }
 
 
@@ -31,11 +31,11 @@ public class User {
         this.role = role;
     }
 
-    public Integer getUser_id() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUser_id(Integer user_id) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
@@ -71,11 +71,11 @@ public class User {
         this.phone = phone;
     }
 
-    public Date getCreate_time() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreate_time(Date create_time) {
+    public void setCreateTime(Date create_time) {
         this.createTime = createTime;
     }
 
