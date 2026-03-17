@@ -1,11 +1,13 @@
-package com.homestead.dao;
+package com.homestead.dao.impl;
 
+import com.homestead.dao.ApprovalRecordDAO;
+import com.homestead.dao.BaseDAO;
 import com.homestead.entity.ApprovalRecord;
 
 /**
  * 审批记录DAO实现类，实现审批记录相关数据库操作
  */
-public class ApprovalRecordDAOImpl extends BaseDAO implements ApprovalRecordDAO{
+public class ApprovalRecordDAOImpl extends BaseDAO implements ApprovalRecordDAO {
     @Override
     public int addApprovalRecord(ApprovalRecord record) {
         String sql = "INSERT INTO ApprovalRecords(app_id,level,opinion,result,approve_time)" +

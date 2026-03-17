@@ -1,6 +1,6 @@
 package com.homestead.test;
 
-import com.homestead.dao.UserDAOImpl;
+import com.homestead.dao.impl.UserDAOImpl;
 import com.homestead.entity.User;
 
 public class TestDAO {

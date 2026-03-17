@@ -1,7 +1,8 @@
-package com.homestead.dao;
+package com.homestead.dao.impl;
 
+import com.homestead.dao.BaseDAO;
+import com.homestead.dao.UserDAO;
 import com.homestead.entity.User;
-import com.sun.org.apache.bcel.internal.generic.RETURN;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,7 +10,7 @@ import java.sql.SQLException;
 /**
  * 用户DAO实现类,实现用户相关数据库操作
  */
-public class UserDAOImpl extends BaseDAO implements UserDAO{
+public class UserDAOImpl extends BaseDAO implements UserDAO {
     @Override
     public User login(String username, String password) {
         String sql = "SELECT user_id AS userId, username, password, role, phone, create_time AS createTime " +

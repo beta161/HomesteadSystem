@@ -1,4 +1,6 @@
-package com.homestead.util;
+package com.homestead.test;
+
+import com.homestead.util.DBUtil;
 
 import java.sql.Connection;
 

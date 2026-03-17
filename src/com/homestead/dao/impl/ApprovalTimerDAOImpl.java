@@ -1,19 +1,19 @@
-package com.homestead.dao;
+package com.homestead.dao.impl;
 
-import com.homestead.entity.ApprovalRecord;
+import com.homestead.dao.ApprovalTimerDAO;
+import com.homestead.dao.BaseDAO;
 import com.homestead.entity.ApprovalTimer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
 /**
  * 审批时限DAO实现类，实现审批时限的相关数据库操作
  */
-public class ApprovalTimerDAOImpl extends BaseDAO implements ApprovalTimerDAO{
+public class ApprovalTimerDAOImpl extends BaseDAO implements ApprovalTimerDAO {
 
     @Override
     public int addApprovalTimer(ApprovalTimer timer) {

@@ -1,13 +1,13 @@
-package com.homestead.dao;
+package com.homestead.dao.impl;
 
+import com.homestead.dao.ApplicationDAO;
+import com.homestead.dao.BaseDAO;
 import com.homestead.entity.Application;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * 申请DAO实现类，实现申请的相关数据
