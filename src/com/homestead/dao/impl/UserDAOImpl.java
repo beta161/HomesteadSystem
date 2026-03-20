@@ -24,8 +24,6 @@ public class UserDAOImpl extends BaseDAO implements UserDAO {
                     user.setUsername(rs.getString("username"));
                     user.setPassword(rs.getString("password"));
                     user.setRole(rs.getString("role"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setCreateTime(rs.getTimestamp("creatTime"));
                     return user;
                 }else{
                     return null;
