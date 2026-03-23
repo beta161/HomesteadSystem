@@ -33,29 +33,24 @@ public class LandRegistrationFrame extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         add(lblTitle, gbc);
 
-        // 申请ID
         JLabel lblAppId = UIUtil.createLabel("申请ID：", false);
         gbc.gridx = 0; gbc.gridy = 1;
         add(lblAppId, gbc);
-
         tfAppId = UIUtil.createTextField();
         tfAppId.setPreferredSize(new Dimension(250, 35));
         gbc.gridx = 1; gbc.gridy = 1;
         add(tfAppId, gbc);
 
-        // 证书编号
         JLabel lblCert = UIUtil.createLabel("确权证书号：", false);
         gbc.gridx = 0; gbc.gridy = 2;
         add(lblCert, gbc);
-
         tfCertNo = UIUtil.createTextField();
         tfCertNo.setPreferredSize(new Dimension(250, 35));
         gbc.gridx = 1; gbc.gridy = 2;
         add(tfCertNo, gbc);
 
-        // 提交按钮
         JButton btnSubmit = UIUtil.createButton("完成确权");
-        btnSubmit.setPreferredSize(new Dimension(120, 40));
+        btnSubmit.setPreferredSize(new Dimension(140, 40));
         btnSubmit.addActionListener(e -> submitReg());
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
         add(btnSubmit, gbc);

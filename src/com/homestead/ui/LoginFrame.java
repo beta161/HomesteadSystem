@@ -20,41 +20,50 @@ public class LoginFrame extends JFrame {
 
     private void initUI() {
         setTitle("宅基地管理系统 - 登录");
-        setSize(400, 300);
+        setSize(450, 350);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new GridBagLayout());
         setBackground(UIUtil.COLOR_LIGHT);
 
+        JPanel mainPanel = UIUtil.createTitledPanel("用户登录", new GridBagLayout());
+        mainPanel.setBackground(UIUtil.COLOR_WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 20, 10, 20);
+        gbc.insets = new Insets(15, 20, 15, 20);
         gbc.anchor = GridBagConstraints.CENTER;
 
         JLabel lblTitle = UIUtil.createLabel("宅基地管理系统", true);
+        lblTitle.setForeground(UIUtil.COLOR_MAIN);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        add(lblTitle, gbc);
+        mainPanel.add(lblTitle, gbc);
 
         JLabel lblUser = UIUtil.createLabel("用户名：", false);
         gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
-        add(lblUser, gbc);
-
+        mainPanel.add(lblUser, gbc);
         tfUsername = UIUtil.createTextField();
+        tfUsername.setPreferredSize(new Dimension(200, 32));
         gbc.gridx = 1; gbc.gridy = 1;
-        add(tfUsername, gbc);
+        mainPanel.add(tfUsername, gbc);
 
         JLabel lblPwd = UIUtil.createLabel("密码：", false);
         gbc.gridx = 0; gbc.gridy = 2;
-        add(lblPwd, gbc);
-
+        mainPanel.add(lblPwd, gbc);
         pfPassword = new JPasswordField();
-        pfPassword.setPreferredSize(new Dimension(200, 30));
+        pfPassword.setFont(UIUtil.FONT_NORMAL);
+        pfPassword.setPreferredSize(new Dimension(200, 32));
+        pfPassword.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIUtil.COLOR_BORDER),
+                BorderFactory.createEmptyBorder(4, 6, 4, 6)
+        ));
         gbc.gridx = 1; gbc.gridy = 2;
-        add(pfPassword, gbc);
+        mainPanel.add(pfPassword, gbc);
 
         JButton btnLogin = UIUtil.createButton("登录");
+        btnLogin.setPreferredSize(new Dimension(120, 40));
         btnLogin.addActionListener(e -> doLogin());
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
-        add(btnLogin, gbc);
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        mainPanel.add(btnLogin, gbc);
+
+        add(mainPanel);
     }
 
     private void doLogin() {

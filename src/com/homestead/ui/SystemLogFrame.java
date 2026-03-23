@@ -32,49 +32,38 @@ public class SystemLogFrame extends JPanel {
         lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         add(lblTitle, BorderLayout.NORTH);
 
-        // 表格
         String[] columns = {"日志ID", "操作人ID", "操作类型", "操作详情", "操作时间"};
         tableModel = new DefaultTableModel(columns, 0);
-        table = new JTable(tableModel);
-        table.setFont(UIUtil.FONT_SMALL);
-        table.setRowHeight(30);
+        table = UIUtil.createTable();
+        table.setModel(tableModel);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // 按钮
         JButton btnRefresh = UIUtil.createButton("刷新日志");
         btnRefresh.addActionListener(e -> loadLogs());
-        JPanel btnPanel = new JPanel();
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnPanel.add(btnRefresh);
         add(btnPanel, BorderLayout.SOUTH);
     }
 
-    /**
-     * 加载日志数据
-     */
     private void loadLogs() {
         tableModel.setRowCount(0);
         List<SystemLog> list;
-
-        // 管理员查看所有，普通用户查看自己
-        if (loginUser.getRole().contains("管理员")) {
+        if ("管理员".equals(loginUser.getRole())) {
             list = logService.getAllLogs();
         } else {
             list = logService.getLogsByUserId(loginUser.getUserId());
         }
-
-        if (list == null || list.isEmpty()) {
-            tableModel.addRow(new Object[]{"暂无日志记录", "", "", "", ""});
-            return;
-        }
-
-        for (SystemLog log : list) {
-            Object[] row = new Object[5];
-            row[0] = log.getLogId();
-            row[1] = log.getUserId();
-            row[2] = log.getOperation();
-            row[3] = log.getDetail();
-            row[4] = log.getOpTime().toLocaleString();
-            tableModel.addRow(row);
+        if (list != null) {
+            for (SystemLog log : list) {
+                String timeStr = log.getOpTime() != null ? log.getOpTime().toLocaleString() : "";
+                tableModel.addRow(new Object[]{
+                        log.getLogId(),
+                        log.getUserId(),
+                        log.getOperation(),
+                        log.getDetail(),
+                        timeStr
+                });
+            }
         }
     }
 }

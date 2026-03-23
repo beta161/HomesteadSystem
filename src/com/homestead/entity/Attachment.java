@@ -11,6 +11,7 @@ public class Attachment {
     private String filePath;
     private String fileName;
     private Date uploadTime;//上传时间
+    private String uploader;
 
     public Attachment() {
     }
@@ -69,5 +70,11 @@ public class Attachment {
 
     public void setUploadTime(Date uploadTime) {
         this.uploadTime = uploadTime;
+    }
+    public String getUploader() {
+        return uploader;
+    }
+    public void setUploader(String uploader) {
+        this.uploader = uploader;
     }
 }

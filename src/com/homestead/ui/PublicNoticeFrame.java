@@ -31,36 +31,33 @@ public class PublicNoticeFrame extends JPanel {
         setLayout(new BorderLayout());
         setBackground(UIUtil.COLOR_WHITE);
 
-        // 顶部发布面板
-        JPanel topPanel = new JPanel(new GridBagLayout());
-        topPanel.setBorder(BorderFactory.createTitledBorder("发布公示"));
-        topPanel.setBackground(UIUtil.COLOR_WHITE);
+        JPanel topPanel = UIUtil.createTitledPanel("发布公示", new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(8, 15, 8, 15);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // 申请ID
         JLabel lblAppId = UIUtil.createLabel("申请ID：", false);
         gbc.gridx = 0; gbc.gridy = 0;
         topPanel.add(lblAppId, gbc);
-
         tfAppId = UIUtil.createTextField();
         gbc.gridx = 1; gbc.gridy = 0;
         topPanel.add(tfAppId, gbc);
 
-        // 公示内容
         JLabel lblContent = UIUtil.createLabel("公示内容：", false);
         gbc.gridx = 0; gbc.gridy = 1;
         topPanel.add(lblContent, gbc);
-
         taContent = new JTextArea(3, 20);
         taContent.setFont(UIUtil.FONT_NORMAL);
         taContent.setLineWrap(true);
-        taContent.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        taContent.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIUtil.COLOR_BORDER),
+                BorderFactory.createEmptyBorder(4, 6, 4, 6)
+        ));
+        JScrollPane scrollPane = new JScrollPane(taContent);
+        scrollPane.setPreferredSize(new Dimension(400, 80));
         gbc.gridx = 1; gbc.gridy = 1;
-        topPanel.add(new JScrollPane(taContent), gbc);
+        topPanel.add(scrollPane, gbc);
 
-        // 发布按钮
         JButton btnPublish = UIUtil.createButton("发布公示");
         btnPublish.addActionListener(e -> publishNotice());
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
@@ -68,25 +65,19 @@ public class PublicNoticeFrame extends JPanel {
 
         add(topPanel, BorderLayout.NORTH);
 
-        // 公示列表表格
         String[] columns = {"公示ID", "申请ID", "公示内容", "发布时间", "状态", "操作"};
         tableModel = new DefaultTableModel(columns, 0);
-        table = new JTable(tableModel);
-        table.setFont(UIUtil.FONT_SMALL);
-        table.setRowHeight(30);
+        table = UIUtil.createTable();
+        table.setModel(tableModel);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // 底部刷新按钮
         JButton btnRefresh = UIUtil.createButton("刷新列表");
         btnRefresh.addActionListener(e -> loadNotices());
-        JPanel btnPanel = new JPanel();
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnPanel.add(btnRefresh);
         add(btnPanel, BorderLayout.SOUTH);
     }
 
-    /**
-     * 发布公示
-     */
     private void publishNotice() {
         String appIdStr = tfAppId.getText().trim();
         String content = taContent.getText().trim();
@@ -120,43 +111,38 @@ public class PublicNoticeFrame extends JPanel {
         }
     }
 
-    /**
-     * 加载公示列表
-     */
     private void loadNotices() {
         tableModel.setRowCount(0);
         List<PublicNotice> list = noticeService.getAllPublicNotices();
-
-        if (list == null || list.isEmpty()) {
-            tableModel.addRow(new Object[]{"暂无公示记录", "", "", "", "", ""});
-            return;
-        }
-
-        for (PublicNotice notice : list) {
-            Object[] row = new Object[6];
-            row[0] = notice.getNoticeId();
-            row[1] = notice.getAppId();
-            row[2] = notice.getNoticeContent();
-            row[3] = notice.getPublishTime().toLocaleString();
-            row[4] = notice.getStatus();
-
-            // 结束公示按钮（仅公示中状态显示）
-            if ("公示中".equals(notice.getStatus())) {
-                JButton btnEnd = UIUtil.createButton("结束公示");
-                btnEnd.setPreferredSize(new Dimension(80, 30));
-                btnEnd.addActionListener(e -> endNotice(notice.getNoticeId()));
-                row[5] = btnEnd;
-            } else {
-                row[5] = ""; // 已结束则无操作按钮
+        if (list != null) {
+            for (PublicNotice notice : list) {
+                String timeStr = notice.getPublishTime() != null ? notice.getPublishTime().toLocaleString() : "";
+                if ("公示中".equals(notice.getStatus())) {
+                    JButton btnEnd = UIUtil.createButton("结束公示");
+                    btnEnd.setPreferredSize(new Dimension(80, 30));
+                    btnEnd.addActionListener(e -> endNotice(notice.getNoticeId()));
+                    tableModel.addRow(new Object[]{
+                            notice.getNoticeId(),
+                            notice.getAppId(),
+                            notice.getNoticeContent(),
+                            timeStr,
+                            notice.getStatus(),
+                            btnEnd
+                    });
+                } else {
+                    tableModel.addRow(new Object[]{
+                            notice.getNoticeId(),
+                            notice.getAppId(),
+                            notice.getNoticeContent(),
+                            timeStr,
+                            notice.getStatus(),
+                            ""
+                    });
+                }
             }
-
-            tableModel.addRow(row);
         }
     }
 
-    /**
-     * 结束公示
-     */
     private void endNotice(Integer noticeId) {
         int confirm = UIUtil.showConfirm("确认结束该公示？");
         if (confirm == JOptionPane.YES_OPTION) {
