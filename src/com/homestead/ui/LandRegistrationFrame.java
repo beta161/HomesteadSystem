@@ -23,37 +23,41 @@ public class LandRegistrationFrame extends JPanel {
     }
 
     private void initUI() {
-        setLayout(new GridBagLayout());
-        setBackground(UIUtil.COLOR_WHITE);
+        setLayout(new BorderLayout());
+        setBackground(UIUtil.COLOR_BG);
+
+        JPanel card = UIUtil.createCardPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 30, 20, 30);
+        gbc.insets = new Insets(15, 25, 15, 25);
         gbc.anchor = GridBagConstraints.WEST;
 
         JLabel lblTitle = UIUtil.createLabel("宅基地确权登记", true);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        add(lblTitle, gbc);
+        card.add(lblTitle, gbc);
 
         JLabel lblAppId = UIUtil.createLabel("申请ID：", false);
-        gbc.gridx = 0; gbc.gridy = 1;
-        add(lblAppId, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        card.add(lblAppId, gbc);
         tfAppId = UIUtil.createTextField();
-        tfAppId.setPreferredSize(new Dimension(250, 35));
-        gbc.gridx = 1; gbc.gridy = 1;
-        add(tfAppId, gbc);
+        tfAppId.setPreferredSize(new Dimension(280, 38));
+        gbc.gridx = 1;
+        card.add(tfAppId, gbc);
 
         JLabel lblCert = UIUtil.createLabel("确权证书号：", false);
         gbc.gridx = 0; gbc.gridy = 2;
-        add(lblCert, gbc);
+        card.add(lblCert, gbc);
         tfCertNo = UIUtil.createTextField();
-        tfCertNo.setPreferredSize(new Dimension(250, 35));
-        gbc.gridx = 1; gbc.gridy = 2;
-        add(tfCertNo, gbc);
+        tfCertNo.setPreferredSize(new Dimension(280, 38));
+        gbc.gridx = 1;
+        card.add(tfCertNo, gbc);
 
         JButton btnSubmit = UIUtil.createButton("完成确权");
-        btnSubmit.setPreferredSize(new Dimension(140, 40));
+        btnSubmit.setPreferredSize(new Dimension(160, 42));
         btnSubmit.addActionListener(e -> submitReg());
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        add(btnSubmit, gbc);
+        card.add(btnSubmit, gbc);
+
+        add(card);
     }
 
     private void submitReg() {

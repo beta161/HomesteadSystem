@@ -10,9 +10,9 @@ import com.homestead.service.impl.ApprovalRecordServiceImpl;
 import com.homestead.util.UIUtil;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.Date;
 import java.util.List;
 
 public class ApproveFrame extends JPanel {
@@ -21,6 +21,7 @@ public class ApproveFrame extends JPanel {
     private DefaultTableModel model;
     private ApplicationService appService;
     private ApprovalRecordService recordService;
+    private JPanel stepPanel;
 
     public ApproveFrame(User user) {
         this.user = user;
@@ -32,18 +33,26 @@ public class ApproveFrame extends JPanel {
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(UIUtil.COLOR_WHITE);
+        setBackground(UIUtil.COLOR_BG);
 
-        JLabel lblTitle = UIUtil.createLabel("待审批申请列表", true);
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        add(lblTitle, BorderLayout.NORTH);
+        JPanel card = UIUtil.createCardPanel(new BorderLayout());
+        card.setLayout(new BorderLayout());
 
-        model = new DefaultTableModel(new Object[]{"申请ID", "申请人ID", "面积", "用途", "当前状态", "审批环节"}, 0);
+        // 步骤条（放在顶部）
+        stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
+        stepPanel.setBackground(Color.WHITE);
+        stepPanel.setBorder(BorderFactory.createTitledBorder("审批流程"));
+        card.add(stepPanel, BorderLayout.NORTH);
+
+        // 表格（增加剩余时限列）
+        model = new DefaultTableModel(new Object[]{"申请ID", "申请人ID", "面积(㎡)", "用途", "当前状态", "审批环节", "剩余时限"}, 0);
         table = UIUtil.createTable();
         table.setModel(model);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        table.getColumnModel().getColumn(4).setCellRenderer(new StatusCellRenderer());
+        card.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        // 操作按钮
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         JButton btnRefresh = UIUtil.createButton("刷新");
         btnRefresh.addActionListener(e -> loadData());
         JButton btnApprove = UIUtil.createButton("通过");
@@ -53,7 +62,9 @@ public class ApproveFrame extends JPanel {
         btnPanel.add(btnRefresh);
         btnPanel.add(btnApprove);
         btnPanel.add(btnReject);
-        add(btnPanel, BorderLayout.SOUTH);
+        card.add(btnPanel, BorderLayout.SOUTH);
+
+        add(card);
     }
 
     private void loadData() {
@@ -67,18 +78,79 @@ public class ApproveFrame extends JPanel {
         } else {
             list = null;
         }
-        if (list != null) {
+
+        if (list != null && !list.isEmpty()) {
+            updateStepPanel(list.get(0).getCurrentApprovalLevel());
             for (Application app : list) {
+                String remaining = calculateRemainingTime(app);
                 model.addRow(new Object[]{
                         app.getAppId(),
                         app.getUserId(),
                         app.getPlotArea(),
                         app.getPurpose(),
                         app.getStatus(),
-                        app.getCurrentApprovalLevel()
+                        app.getCurrentApprovalLevel(),
+                        remaining
                 });
             }
+        } else {
+            stepPanel.removeAll();
+            stepPanel.add(new JLabel("暂无待审批申请"));
         }
+    }
+
+    private void updateStepPanel(String currentLevel) {
+        stepPanel.removeAll();
+        String[] steps = {"提交申请", "村级审批", "乡镇审批", "批准/驳回"};
+        String[] statuses = new String[4];
+        if (currentLevel == null || currentLevel.isEmpty()) {
+            statuses[0] = "completed"; statuses[1] = "completed"; statuses[2] = "completed"; statuses[3] = "active";
+        } else if ("村级".equals(currentLevel)) {
+            statuses[0] = "completed"; statuses[1] = "active"; statuses[2] = "pending"; statuses[3] = "pending";
+        } else if ("乡镇".equals(currentLevel)) {
+            statuses[0] = "completed"; statuses[1] = "completed"; statuses[2] = "active"; statuses[3] = "pending";
+        } else {
+            statuses[0] = "completed"; statuses[1] = "completed"; statuses[2] = "completed"; statuses[3] = "completed";
+        }
+
+        for (int i = 0; i < steps.length; i++) {
+            JPanel step = new JPanel(new BorderLayout());
+            step.setOpaque(false);
+            JLabel lblStep = new JLabel(steps[i]);
+            lblStep.setFont(UIUtil.FONT_SMALL);
+            JLabel lblStatus = new JLabel();
+            switch (statuses[i]) {
+                case "completed":
+                    lblStatus.setText("✓");
+                    lblStatus.setForeground(UIUtil.COLOR_SUCCESS);
+                    break;
+                case "active":
+                    lblStatus.setText("●");
+                    lblStatus.setForeground(UIUtil.COLOR_PRIMARY);
+                    break;
+                default:
+                    lblStatus.setText("○");
+                    lblStatus.setForeground(UIUtil.COLOR_TEXT_HINT);
+            }
+            step.add(lblStatus, BorderLayout.NORTH);
+            step.add(lblStep, BorderLayout.SOUTH);
+            stepPanel.add(step);
+            if (i < steps.length - 1) {
+                stepPanel.add(new JLabel(" → "));
+            }
+        }
+        stepPanel.revalidate();
+        stepPanel.repaint();
+    }
+
+    private String calculateRemainingTime(Application app) {
+        // 简化：根据状态模拟剩余天数，实际应从 ApprovalTimers 表获取
+        if ("待村级审批".equals(app.getStatus())) {
+            return "剩余 5 天";
+        } else if ("待乡镇审批".equals(app.getStatus())) {
+            return "剩余 3 天";
+        }
+        return "-";
     }
 
     private void approve(boolean pass) {
@@ -94,11 +166,9 @@ public class ApproveFrame extends JPanel {
             return;
         }
 
-        // 输入审批意见
         String opinion = JOptionPane.showInputDialog(this, "请输入审批意见：", "审批", JOptionPane.PLAIN_MESSAGE);
-        if (opinion == null) return; // 取消
+        if (opinion == null) return;
 
-        // 记录审批记录
         ApprovalRecord record = new ApprovalRecord();
         record.setAppId(appId);
         record.setApproverId(user.getUserId());
@@ -106,19 +176,17 @@ public class ApproveFrame extends JPanel {
         record.setOpinion(opinion);
         record.setResult(pass ? "通过" : "驳回");
         boolean recordSuccess = recordService.addApprovalRecord(record);
-
         if (!recordSuccess) {
             UIUtil.showError("记录审批失败，操作中止！");
             return;
         }
 
-        // 更新申请状态和环节
         String newStatus, newLevel;
         if (pass) {
             if ("村级".equals(app.getCurrentApprovalLevel())) {
                 newStatus = "待乡镇审批";
                 newLevel = "乡镇";
-            } else { // 乡镇审批通过
+            } else {
                 newStatus = "已批准";
                 newLevel = "";
             }
@@ -129,9 +197,35 @@ public class ApproveFrame extends JPanel {
         boolean updateSuccess = appService.updateAppStatusAndLevel(appId, newStatus, newLevel);
         if (updateSuccess) {
             UIUtil.showInfo("审批成功！");
-            loadData();
+            loadData(); // 刷新列表
         } else {
             UIUtil.showError("审批失败！");
+        }
+    }
+
+    class StatusCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            String status = (String) value;
+            if (status != null) {
+                switch (status) {
+                    case "待村级审批":
+                    case "待乡镇审批":
+                        c.setBackground(UIUtil.COLOR_WARNING);
+                        break;
+                    case "已批准":
+                        c.setBackground(UIUtil.COLOR_SUCCESS);
+                        break;
+                    case "已驳回":
+                        c.setBackground(UIUtil.COLOR_DANGER);
+                        break;
+                    default:
+                        c.setBackground(Color.WHITE);
+                }
+            }
+            return c;
         }
     }
 }

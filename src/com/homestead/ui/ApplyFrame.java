@@ -1,85 +1,85 @@
 package com.homestead.ui;
 
 import com.homestead.entity.Application;
-import com.homestead.entity.Attachment;
 import com.homestead.entity.User;
 import com.homestead.service.ApplicationService;
-import com.homestead.service.AttachmentService;
 import com.homestead.service.impl.ApplicationServiceImpl;
-import com.homestead.service.impl.AttachmentServiceImpl;
 import com.homestead.util.UIUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.util.Date;
 
 public class ApplyFrame extends JPanel {
     private User user;
     private JTextField tfArea;
     private JTextField tfPurpose;
-    private JTextField tfFilePath;
     private ApplicationService appService;
-    private AttachmentService attachService;
 
     public ApplyFrame(User user) {
         this.user = user;
         this.appService = new ApplicationServiceImpl();
-        this.attachService = new AttachmentServiceImpl();
         initUI();
     }
 
     private void initUI() {
-        setLayout(new GridBagLayout());
-        setBackground(UIUtil.COLOR_WHITE);
+        setLayout(new BorderLayout());
+        setBackground(UIUtil.COLOR_BG);
+
+        JPanel card = UIUtil.createCardPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 25, 12, 25);
+        gbc.insets = new Insets(10, 20, 10, 20);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JLabel lblTitle = UIUtil.createLabel("宅基地申请登记", true);
+        // 申请人信息组
+        JPanel infoGroup = UIUtil.createTitledPanel("申请人信息");
+        GridBagConstraints gbcInfo = new GridBagConstraints();
+        gbcInfo.insets = new Insets(8, 15, 8, 15);
+        gbcInfo.anchor = GridBagConstraints.WEST;
+        JLabel lblName = UIUtil.createLabel("姓名：" + user.getUsername(), false);
+        gbcInfo.gridx = 0; gbcInfo.gridy = 0;
+        infoGroup.add(lblName, gbcInfo);
+        JLabel lblPhone = UIUtil.createLabel("电话：" + (user.getPhone() != null ? user.getPhone() : ""), false);
+        gbcInfo.gridx = 1; gbcInfo.gridy = 0;
+        infoGroup.add(lblPhone, gbcInfo);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        add(lblTitle, gbc);
+        card.add(infoGroup, gbc);
 
+        // 地块信息组
+        JPanel landGroup = UIUtil.createTitledPanel("地块信息");
+        gbcInfo.gridx = 0; gbcInfo.gridy = 0;
         JLabel lblArea = UIUtil.createLabel("面积(㎡)：", false);
-        gbc.gridx = 0; gbc.gridy = 1;
-        add(lblArea, gbc);
+        landGroup.add(lblArea, gbcInfo);
         tfArea = UIUtil.createTextField();
-        gbc.gridx = 1; gbc.gridy = 1;
-        add(tfArea, gbc);
+        gbcInfo.gridx = 1;
+        landGroup.add(tfArea, gbcInfo);
 
         JLabel lblPurpose = UIUtil.createLabel("用途：", false);
-        gbc.gridx = 0; gbc.gridy = 2;
-        add(lblPurpose, gbc);
+        gbcInfo.gridx = 0; gbcInfo.gridy = 1;
+        landGroup.add(lblPurpose, gbcInfo);
         tfPurpose = UIUtil.createTextField();
-        gbc.gridx = 1; gbc.gridy = 2;
-        add(tfPurpose, gbc);
+        gbcInfo.gridx = 1;
+        landGroup.add(tfPurpose, gbcInfo);
+        gbc.gridy = 1;
+        card.add(landGroup, gbc);
 
-        JLabel lblFile = UIUtil.createLabel("附件：", false);
-        gbc.gridx = 0; gbc.gridy = 3;
-        add(lblFile, gbc);
-        JPanel filePanel = new JPanel(new BorderLayout());
-        tfFilePath = UIUtil.createTextField();
-        JButton btnSel = UIUtil.createButton("...");
-        btnSel.setPreferredSize(new Dimension(50, 32));
-        btnSel.addActionListener(e -> selectFile());
-        filePanel.add(tfFilePath, BorderLayout.CENTER);
-        filePanel.add(btnSel, BorderLayout.EAST);
-        gbc.gridx = 1; gbc.gridy = 3;
-        add(filePanel, gbc);
+        // 附件信息组（可扩展）
+        JPanel attachGroup = UIUtil.createTitledPanel("附件材料");
+        JLabel lblNote = new JLabel("请在上传附件后，在此处填写附件说明。");
+        lblNote.setFont(UIUtil.FONT_SMALL);
+        lblNote.setForeground(UIUtil.COLOR_TEXT_HINT);
+        attachGroup.add(lblNote);
+        gbc.gridy = 2;
+        card.add(attachGroup, gbc);
 
-        JButton btnSubmit = UIUtil.createButton("提交");
-        btnSubmit.setPreferredSize(new Dimension(120, 40));
+        // 提交按钮
+        JButton btnSubmit = UIUtil.createButton("提交申请");
+        btnSubmit.setPreferredSize(new Dimension(160, 42));
         btnSubmit.addActionListener(e -> submit());
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        add(btnSubmit, gbc);
-    }
+        gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        card.add(btnSubmit, gbc);
 
-    private void selectFile() {
-        JFileChooser chooser = new JFileChooser();
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            tfFilePath.setText(f.getAbsolutePath());
-        }
+        add(card, BorderLayout.CENTER);
     }
 
     private void submit() {
@@ -93,17 +93,7 @@ public class ApplyFrame extends JPanel {
             app.setCurrentApprovalLevel("村级");
 
             if (appService.submitApplication(app)) {
-                // 注意：application的appId在数据库中自增，需要获取返回的ID才能关联附件
-                // 但submitApplication未返回ID，实际需扩展，这里简化：附件记录可在申请成功后查询最新申请ID（不推荐）
-                // 此处假设申请后app对象已填充ID（需修改Service），为简化，暂不处理附件关联
-                String path = tfFilePath.getText().trim();
-                if (!path.isEmpty()) {
-                    Attachment attach = new Attachment();
-                    // 这里需要真正的appId，但未获取，演示时跳过
-                    UIUtil.showInfo("提交成功，附件需在申请ID生成后重新上传。");
-                } else {
-                    UIUtil.showInfo("提交成功！");
-                }
+                UIUtil.showInfo("提交成功！");
                 clearForm();
             } else {
                 UIUtil.showError("提交失败！");
@@ -112,13 +102,11 @@ public class ApplyFrame extends JPanel {
             UIUtil.showError("面积必须为数字！");
         } catch (Exception e) {
             UIUtil.showError("提交失败：" + e.getMessage());
-            e.printStackTrace();
         }
     }
 
     private void clearForm() {
         tfArea.setText("");
         tfPurpose.setText("");
-        tfFilePath.setText("");
     }
 }

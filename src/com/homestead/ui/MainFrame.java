@@ -14,95 +14,145 @@ public class MainFrame extends JFrame {
     public MainFrame(User user) {
         this.loginUser = user;
         initUI();
+        checkTodoReminders();
     }
 
     private void initUI() {
-        setTitle("宅基地管理系统 - 当前用户：" + loginUser.getUsername());
-        setSize(1100, 750);
+        setTitle("全国农村宅基地管理系统");
+        setSize(1300, 850);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // 左侧菜单
+        // 顶部渐变导航栏
+        JPanel topBar = UIUtil.createGradientHeader();
+        JLabel lblSystem = new JLabel("🏠 全国农村宅基地管理系统");
+        lblSystem.setFont(new Font("微软雅黑", Font.BOLD, 20));
+        lblSystem.setForeground(Color.WHITE);
+        lblSystem.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+        topBar.add(lblSystem, BorderLayout.WEST);
+
+        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        userPanel.setOpaque(false);
+        JLabel lblUser = new JLabel("欢迎，" + loginUser.getUsername() + " (" + loginUser.getRole() + ")");
+        lblUser.setFont(UIUtil.FONT_BODY);
+        lblUser.setForeground(Color.WHITE);
+        JButton btnLogout = UIUtil.createButton("退出");
+        btnLogout.setBackground(UIUtil.COLOR_DANGER);
+        btnLogout.addActionListener(e -> {
+            int confirm = UIUtil.showConfirm("确定要退出系统吗？");
+            if (confirm == JOptionPane.YES_OPTION) {
+                new LoginFrame().setVisible(true);
+                dispose();
+            }
+        });
+        userPanel.add(lblUser);
+        userPanel.add(btnLogout);
+        topBar.add(userPanel, BorderLayout.EAST);
+        add(topBar, BorderLayout.NORTH);
+
+        // 左侧菜单（按角色分组）
         JPanel leftMenuPanel = new JPanel();
         leftMenuPanel.setLayout(new BoxLayout(leftMenuPanel, BoxLayout.Y_AXIS));
-        leftMenuPanel.setBackground(new Color(228, 243, 240));
-        leftMenuPanel.setPreferredSize(new Dimension(200, 0));
+        leftMenuPanel.setBackground(UIUtil.COLOR_BG);
+        leftMenuPanel.setPreferredSize(new Dimension(240, 0));
+        leftMenuPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIUtil.COLOR_BORDER));
 
-        // 根据角色添加菜单项
         String role = loginUser.getRole();
 
-        // 通用菜单（所有用户可见）
-        if (!"管理员".equals(role)) { // 普通用户（申请人、审批人）
-            addMenuItem(leftMenuPanel, "申请登记", "apply");
-        }
-        if (role.contains("村级") || role.contains("乡镇")) {
-            addMenuItem(leftMenuPanel, "审批管理", "approve");
-        }
-        if (!"管理员".equals(role)) {
-            addMenuItem(leftMenuPanel, "申诉处理", "appeal"); // 普通用户提交申诉
-        }
-        addMenuItem(leftMenuPanel, "附件管理", "attachment");
-
-        // 管理员专属菜单
-        if ("管理员".equals(role)) {
-            addMenuItem(leftMenuPanel, "确权登记", "registration");
-            addMenuItem(leftMenuPanel, "公示管理", "notice");
-            addMenuItem(leftMenuPanel, "系统日志", "log");
-            addMenuItem(leftMenuPanel, "申诉处理", "appealAdmin"); // 管理员处理申诉
+        if ("申请人".equals(role)) {
+            addMenuGroup(leftMenuPanel, "宅基地申请", new String[][]{{"申请登记", "apply"}, {"附件管理", "attachment"}});
+            addMenuGroup(leftMenuPanel, "申诉反馈", new String[][]{{"申诉处理", "appeal"}});
+        } else if (role.contains("村级") || role.contains("乡镇")) {
+            addMenuGroup(leftMenuPanel, "审批工作台", new String[][]{{"审批管理", "approve"}});
+        } else if ("管理员".equals(role)) {
+            addMenuGroup(leftMenuPanel, "行政管理", new String[][]{{"确权登记", "registration"}, {"公示管理", "notice"}, {"系统日志", "log"}});
+            addMenuGroup(leftMenuPanel, "申诉处理", new String[][]{{"申诉处理", "appealAdmin"}});
+            addMenuGroup(leftMenuPanel, "统计分析", new String[][]{{"统计报表", "stats"}});
         }
 
         leftMenuPanel.add(Box.createVerticalGlue());
-
         JButton btnExit = UIUtil.createButton("退出系统");
         btnExit.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnExit.setPreferredSize(new Dimension(160, 40));
-        btnExit.addActionListener(e -> {
-            int confirm = UIUtil.showConfirm("确定要退出系统吗？");
-            if (confirm == JOptionPane.YES_OPTION) {
-                System.exit(0);
-            }
-        });
+        btnExit.setMaximumSize(new Dimension(200, 40));
+        btnExit.setBackground(UIUtil.COLOR_DANGER);
+        btnExit.addActionListener(e -> System.exit(0));
+        leftMenuPanel.add(Box.createVerticalStrut(20));
         leftMenuPanel.add(btnExit);
         leftMenuPanel.add(Box.createVerticalStrut(20));
 
-        // 右侧卡片区域
+        add(leftMenuPanel, BorderLayout.WEST);
+
+        // 右侧卡片内容区
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-        contentPanel.setBackground(UIUtil.COLOR_WHITE);
+        contentPanel.setBackground(UIUtil.COLOR_BG);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         contentPanel.add(new ApplyFrame(loginUser), "apply");
         contentPanel.add(new ApproveFrame(loginUser), "approve");
-        contentPanel.add(new AppealFrame(loginUser, false), "appeal");       // 普通用户申诉提交
+        contentPanel.add(new AppealFrame(loginUser, false), "appeal");
         contentPanel.add(new AttachmentFrame(loginUser), "attachment");
         contentPanel.add(new LandRegistrationFrame(loginUser), "registration");
         contentPanel.add(new PublicNoticeFrame(loginUser), "notice");
         contentPanel.add(new SystemLogFrame(loginUser), "log");
-        contentPanel.add(new AppealFrame(loginUser, true), "appealAdmin");   // 管理员申诉处理
+        contentPanel.add(new AppealFrame(loginUser, true), "appealAdmin");
+        contentPanel.add(new StatisticsFrame(loginUser), "stats");
 
-        add(leftMenuPanel, BorderLayout.WEST);
+        // 根据角色设置默认显示的卡片
+        if (role.contains("村级") || role.contains("乡镇")) {
+            cardLayout.show(contentPanel, "approve");
+        } else {
+            cardLayout.show(contentPanel, "apply");
+        }
+
         add(contentPanel, BorderLayout.CENTER);
-
-        cardLayout.show(contentPanel, "apply");
     }
 
-    private void addMenuItem(JPanel panel, String text, String cardName) {
-        JButton btn = UIUtil.createButton(text);
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(180, 40));
-        btn.setPreferredSize(new Dimension(180, 40));
-        btn.setBackground(new Color(49, 216, 241));
-        btn.setForeground(Color.WHITE);
-        btn.addActionListener(e -> cardLayout.show(contentPanel, cardName));
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btn.setBackground(new Color(146, 226, 119));
+    private void addMenuGroup(JPanel panel, String groupTitle, String[][] items) {
+        JLabel lblGroup = new JLabel(groupTitle);
+        lblGroup.setFont(UIUtil.FONT_SUBTITLE);
+        lblGroup.setForeground(UIUtil.COLOR_PRIMARY);
+        lblGroup.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
+        lblGroup.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(lblGroup);
+
+        for (String[] item : items) {
+            JButton btn = new JButton(item[0]);
+            btn.setFont(UIUtil.FONT_BODY);
+            btn.setForeground(UIUtil.COLOR_TEXT_BODY);
+            btn.setBackground(Color.WHITE);
+            btn.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+            btn.setFocusPainted(false);
+            btn.setMaximumSize(new Dimension(200, 40));
+            btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+            btn.addActionListener(e -> cardLayout.show(contentPanel, item[1]));
+            btn.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    btn.setBackground(new Color(230, 240, 255));
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    btn.setBackground(Color.WHITE);
+                }
+            });
+            panel.add(btn);
+            panel.add(Box.createVerticalStrut(5));
+        }
+    }
+
+    private void checkTodoReminders() {
+        // 仅对审批人（村级/乡镇）显示待办提醒
+        String role = loginUser.getRole();
+        if (role.contains("村级") || role.contains("乡镇")) {
+            // 真实项目中应调用 Service 查询待审批数量
+            // 这里用模拟数据，实际可替换为真实查询
+            int pendingCount = 0; // 替换为 appService.getApplicationsByCurrentLevel("村级/乡镇").size()
+            if (pendingCount > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "您有 " + pendingCount + " 项待审批申请，请及时处理！",
+                        "待办提醒",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btn.setBackground(new Color(241, 218, 124));
-            }
-        });
-        panel.add(Box.createVerticalStrut(8));
-        panel.add(btn);
+        }
     }
 }

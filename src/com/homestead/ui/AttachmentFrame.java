@@ -29,51 +29,64 @@ public class AttachmentFrame extends JPanel {
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(UIUtil.COLOR_WHITE);
+        setBackground(UIUtil.COLOR_BG);
 
-        JPanel topPanel = UIUtil.createTitledPanel("附件上传", new GridBagLayout());
+        JPanel card = UIUtil.createCardPanel(new BorderLayout());
+        card.setLayout(new BorderLayout());
+
+        // 上传区域
+        JPanel uploadPanel = UIUtil.createTitledPanel("附件上传");
+        uploadPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 15, 8, 15);
         gbc.anchor = GridBagConstraints.WEST;
 
         JLabel lblAppId = UIUtil.createLabel("申请ID：", false);
         gbc.gridx = 0; gbc.gridy = 0;
-        topPanel.add(lblAppId, gbc);
+        uploadPanel.add(lblAppId, gbc);
         tfAppId = UIUtil.createTextField();
-        gbc.gridx = 1; gbc.gridy = 0;
-        topPanel.add(tfAppId, gbc);
+        tfAppId.setPreferredSize(new Dimension(200, 35));
+        gbc.gridx = 1;
+        uploadPanel.add(tfAppId, gbc);
 
         JLabel lblFile = UIUtil.createLabel("文件路径：", false);
         gbc.gridx = 0; gbc.gridy = 1;
-        topPanel.add(lblFile, gbc);
+        uploadPanel.add(lblFile, gbc);
         JPanel filePanel = new JPanel(new BorderLayout());
         tfFilePath = UIUtil.createTextField();
         JButton btnSelect = UIUtil.createButton("浏览");
-        btnSelect.setPreferredSize(new Dimension(80, 32));
+        btnSelect.setPreferredSize(new Dimension(80, 35));
         btnSelect.addActionListener(e -> selectFile());
         filePanel.add(tfFilePath, BorderLayout.CENTER);
         filePanel.add(btnSelect, BorderLayout.EAST);
-        gbc.gridx = 1; gbc.gridy = 1;
-        topPanel.add(filePanel, gbc);
+        gbc.gridx = 1;
+        uploadPanel.add(filePanel, gbc);
 
-        JButton btnUpload = UIUtil.createButton("上传");
+        JButton btnUpload = UIUtil.createButton("上传附件");
         btnUpload.addActionListener(e -> uploadAttachment());
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        topPanel.add(btnUpload, gbc);
+        uploadPanel.add(btnUpload, gbc);
 
-        add(topPanel, BorderLayout.NORTH);
+        card.add(uploadPanel, BorderLayout.NORTH);
 
+        // 附件列表区域
         String[] columns = {"附件ID", "申请ID", "文件名", "文件路径", "上传时间", "操作"};
         tableModel = new DefaultTableModel(columns, 0);
         table = UIUtil.createTable();
         table.setModel(tableModel);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        card.add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // 底部按钮
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         JButton btnRefresh = UIUtil.createButton("刷新列表");
         btnRefresh.addActionListener(e -> loadAttachments());
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton btnDelete = UIUtil.createButton("删除选中");
+        btnDelete.addActionListener(e -> deleteSelectedAttachment());
         btnPanel.add(btnRefresh);
-        add(btnPanel, BorderLayout.SOUTH);
+        btnPanel.add(btnDelete);
+        card.add(btnPanel, BorderLayout.SOUTH);
+
+        add(card);
     }
 
     private void selectFile() {
@@ -127,19 +140,16 @@ public class AttachmentFrame extends JPanel {
         try {
             List<Attachment> list = attachService.getAttachmentsByAppId(Integer.parseInt(appIdStr));
             tableModel.setRowCount(0);
-            if (list != null) {
+            if (list != null && !list.isEmpty()) {
                 for (Attachment attach : list) {
                     String timeStr = attach.getUploadTime() != null ? attach.getUploadTime().toLocaleString() : "";
-                    JButton btnDel = UIUtil.createButton("删除");
-                    btnDel.setPreferredSize(new Dimension(70, 30));
-                    btnDel.addActionListener(e -> deleteAttachment(attach.getAttachId()));
                     tableModel.addRow(new Object[]{
                             attach.getAttachId(),
                             attach.getAppId(),
                             attach.getFileName(),
                             attach.getFilePath(),
                             timeStr,
-                            btnDel
+                            "删除"
                     });
                 }
             }
@@ -148,7 +158,13 @@ public class AttachmentFrame extends JPanel {
         }
     }
 
-    private void deleteAttachment(Integer attachId) {
+    private void deleteSelectedAttachment() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            UIUtil.showError("请先选择要删除的附件！");
+            return;
+        }
+        Integer attachId = (Integer) tableModel.getValueAt(row, 0);
         int confirm = UIUtil.showConfirm("确认删除该附件？");
         if (confirm == JOptionPane.YES_OPTION) {
             boolean success = attachService.deleteAttachment(attachId);

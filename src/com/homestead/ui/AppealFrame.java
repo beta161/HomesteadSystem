@@ -31,63 +31,74 @@ public class AppealFrame extends JPanel {
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(UIUtil.COLOR_WHITE);
+        setBackground(UIUtil.COLOR_BG);
 
         if (isAdminMode) {
-            // 管理员模式：显示待处理申诉列表并提供处理按钮
+            // 管理员模式：待处理申诉列表
+            JPanel card = UIUtil.createCardPanel(new BorderLayout());
+            card.setLayout(new BorderLayout());
+
             JLabel lblTitle = UIUtil.createLabel("待处理申诉列表", true);
             lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-            add(lblTitle, BorderLayout.NORTH);
+            card.add(lblTitle, BorderLayout.NORTH);
 
             String[] columns = {"申诉ID", "申请ID", "申诉理由", "申诉时间", "操作"};
             model = new DefaultTableModel(columns, 0);
             table = UIUtil.createTable();
             table.setModel(model);
-            add(new JScrollPane(table), BorderLayout.CENTER);
+            card.add(new JScrollPane(table), BorderLayout.CENTER);
 
-            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
             JButton btnRefresh = UIUtil.createButton("刷新");
             btnRefresh.addActionListener(e -> loadPendingAppeals());
             JButton btnHandle = UIUtil.createButton("处理申诉");
             btnHandle.addActionListener(e -> handleAppeal());
             btnPanel.add(btnRefresh);
             btnPanel.add(btnHandle);
-            add(btnPanel, BorderLayout.SOUTH);
+            card.add(btnPanel, BorderLayout.SOUTH);
+
+            add(card);
         } else {
             // 普通用户模式：提交申诉表单
-            JPanel formPanel = UIUtil.createTitledPanel("提交申诉", new GridBagLayout());
+            JPanel card = UIUtil.createCardPanel(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(8, 15, 8, 15);
+            gbc.insets = new Insets(15, 25, 15, 25);
             gbc.anchor = GridBagConstraints.WEST;
 
+            JLabel lblTitle = UIUtil.createLabel("提交申诉", true);
+            gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+            card.add(lblTitle, gbc);
+
             JLabel lblAppId = UIUtil.createLabel("申请ID：", false);
-            gbc.gridx = 0; gbc.gridy = 0;
-            formPanel.add(lblAppId, gbc);
+            gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+            card.add(lblAppId, gbc);
             tfAppId = UIUtil.createTextField();
-            gbc.gridx = 1; gbc.gridy = 0;
-            formPanel.add(tfAppId, gbc);
+            tfAppId.setPreferredSize(new Dimension(280, 38));
+            gbc.gridx = 1;
+            card.add(tfAppId, gbc);
 
             JLabel lblReason = UIUtil.createLabel("申诉理由：", false);
-            gbc.gridx = 0; gbc.gridy = 1;
-            formPanel.add(lblReason, gbc);
-            taReason = new JTextArea(4, 20);
-            taReason.setFont(UIUtil.FONT_NORMAL);
+            gbc.gridx = 0; gbc.gridy = 2;
+            card.add(lblReason, gbc);
+            taReason = new JTextArea(4, 25);
+            taReason.setFont(UIUtil.FONT_BODY);
             taReason.setLineWrap(true);
             taReason.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(UIUtil.COLOR_BORDER),
-                    BorderFactory.createEmptyBorder(4, 6, 4, 6)
+                    BorderFactory.createLineBorder(UIUtil.COLOR_BORDER, 1, true),
+                    BorderFactory.createEmptyBorder(8, 12, 8, 12)
             ));
             JScrollPane scrollPane = new JScrollPane(taReason);
-            scrollPane.setPreferredSize(new Dimension(300, 80));
-            gbc.gridx = 1; gbc.gridy = 1;
-            formPanel.add(scrollPane, gbc);
+            scrollPane.setPreferredSize(new Dimension(400, 100));
+            gbc.gridx = 1;
+            card.add(scrollPane, gbc);
 
             JButton btnSubmit = UIUtil.createButton("提交申诉");
+            btnSubmit.setPreferredSize(new Dimension(160, 42));
             btnSubmit.addActionListener(e -> submitAppeal());
-            gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-            formPanel.add(btnSubmit, gbc);
+            gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+            card.add(btnSubmit, gbc);
 
-            add(formPanel, BorderLayout.CENTER);
+            add(card);
         }
     }
 
