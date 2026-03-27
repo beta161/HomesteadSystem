@@ -34,7 +34,7 @@ public class AppealFrame extends JPanel {
         setBackground(UIUtil.COLOR_BG);
 
         if (isAdminMode) {
-            // 管理员模式：待处理申诉列表
+            // 管理员模式
             JPanel card = UIUtil.createCardPanel(new BorderLayout());
             card.setLayout(new BorderLayout());
 
@@ -59,7 +59,7 @@ public class AppealFrame extends JPanel {
 
             add(card);
         } else {
-            // 普通用户模式：提交申诉表单
+            // 普通用户模式
             JPanel card = UIUtil.createCardPanel(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(15, 25, 15, 25);
@@ -122,7 +122,7 @@ public class AppealFrame extends JPanel {
                 tfAppId.setText("");
                 taReason.setText("");
             } else {
-                UIUtil.showError("提交失败！");
+                UIUtil.showError("提交失败！请检查申请ID是否正确或是否已存在申诉。");
             }
         } catch (NumberFormatException e) {
             UIUtil.showError("申请ID必须为整数！");
@@ -144,6 +144,8 @@ public class AppealFrame extends JPanel {
                 });
             }
         }
+        revalidate();
+        repaint();
     }
 
     private void handleAppeal() {

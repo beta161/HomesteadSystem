@@ -81,10 +81,12 @@ public class LandRegistrationFrame extends JPanel {
                 UIUtil.showInfo("确权登记成功！");
                 clearForm();
             } else {
-                UIUtil.showError("登记失败！申请ID可能已存在！");
+                UIUtil.showError("登记失败！申请ID可能已存在或无效！");
             }
         } catch (NumberFormatException e) {
             UIUtil.showError("申请ID必须为整数！");
+        } catch (Exception e) {
+            UIUtil.showError("操作失败：" + e.getMessage());
         }
     }
 

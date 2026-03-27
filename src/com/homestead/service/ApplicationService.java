@@ -46,4 +46,7 @@ public interface ApplicationService {
      * @return true:更新成功，false:更新失败
      */
     boolean updateAppStatusAndLevel(Integer appId, String status, String level);
+
+
+    List<Application> getAllApplications();
 }

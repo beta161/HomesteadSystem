@@ -2,8 +2,8 @@ package com.homestead.util;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import java.awt.*;
 import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 
 public class UIUtil {
     // 主色调（低饱和度政务蓝）
@@ -26,7 +26,7 @@ public class UIUtil {
     public static final Color COLOR_TEXT_BODY = new Color(60, 60, 60);
     public static final Color COLOR_TEXT_HINT = new Color(150, 150, 150);
 
-    // 字体（加大字号，更清晰）
+    // 字体
     public static final Font FONT_TITLE = new Font("微软雅黑", Font.BOLD, 20);
     public static final Font FONT_SUBTITLE = new Font("微软雅黑", Font.BOLD, 16);
     public static final Font FONT_BODY = new Font("微软雅黑", Font.PLAIN, 15);
@@ -51,11 +51,14 @@ public class UIUtil {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // 1. 绘制白色圆角背景
                 g2.setColor(COLOR_CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS);
+                // 2. 先调用父类绘制子组件
+                super.paintComponent(g2);
+                // 3. 最后绘制半透明阴影（放在最上层，但透明度低，不影响交互）
                 g2.setColor(new Color(0, 0, 0, 20));
                 g2.fillRoundRect(2, 2, getWidth() - 2, getHeight() - 2, CORNER_RADIUS, CORNER_RADIUS);
-                super.paintComponent(g2);
                 g2.dispose();
             }
         };
@@ -134,7 +137,7 @@ public class UIUtil {
     }
 
     /**
-     * 表格（隔行变色、抗锯齿）
+     * 表格（隔行变色）
      */
     public static JTable createTable() {
         JTable table = new JTable() {

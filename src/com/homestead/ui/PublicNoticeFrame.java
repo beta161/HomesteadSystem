@@ -30,7 +30,6 @@ public class PublicNoticeFrame extends JPanel {
         JPanel card = UIUtil.createCardPanel(new BorderLayout());
         card.setLayout(new BorderLayout());
 
-        // 发布区域（管理员可见）
         if ("管理员".equals(loginUser.getRole())) {
             JPanel publishPanel = UIUtil.createTitledPanel("发布新公示");
             publishPanel.setLayout(new GridBagLayout());
@@ -81,7 +80,7 @@ public class PublicNoticeFrame extends JPanel {
                         taContent.setText("");
                         loadNotices();
                     } else {
-                        UIUtil.showError("发布失败！");
+                        UIUtil.showError("发布失败！申请ID可能已存在公示或无效！");
                     }
                 } catch (NumberFormatException ex) {
                     UIUtil.showError("申请ID必须为整数！");
@@ -92,7 +91,6 @@ public class PublicNoticeFrame extends JPanel {
             card.add(publishPanel, BorderLayout.NORTH);
         }
 
-        // 公示列表（卡片式）
         noticeListPanel = new JPanel();
         noticeListPanel.setLayout(new BoxLayout(noticeListPanel, BoxLayout.Y_AXIS));
         noticeListPanel.setBackground(UIUtil.COLOR_BG);
@@ -115,7 +113,6 @@ public class PublicNoticeFrame extends JPanel {
                 gbc.insets = new Insets(8, 15, 8, 15);
                 gbc.fill = GridBagConstraints.HORIZONTAL;
 
-                // 第一行：标题和状态
                 JLabel lblTitle = new JLabel("公示 #" + notice.getNoticeId() + " - 申请ID: " + notice.getAppId());
                 lblTitle.setFont(UIUtil.FONT_SUBTITLE);
                 lblTitle.setForeground(UIUtil.COLOR_PRIMARY);
@@ -129,14 +126,12 @@ public class PublicNoticeFrame extends JPanel {
                 gbc.anchor = GridBagConstraints.EAST;
                 card.add(lblStatus, gbc);
 
-                // 第二行：公示内容
                 JLabel lblContent = new JLabel("<html>" + notice.getNoticeContent() + "</html>");
                 lblContent.setFont(UIUtil.FONT_BODY);
                 gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2; gbc.weightx = 1.0;
                 gbc.anchor = GridBagConstraints.WEST;
                 card.add(lblContent, gbc);
 
-                // 第三行：发布时间
                 String timeStr = notice.getPublishTime() != null ? notice.getPublishTime().toLocaleString() : "";
                 JLabel lblTime = new JLabel("发布时间：" + timeStr);
                 lblTime.setFont(UIUtil.FONT_SMALL);
@@ -144,7 +139,6 @@ public class PublicNoticeFrame extends JPanel {
                 gbc.gridy = 2;
                 card.add(lblTime, gbc);
 
-                // 第四行：操作按钮（仅管理员且公示中）
                 if ("管理员".equals(loginUser.getRole()) && "公示中".equals(notice.getStatus())) {
                     JButton btnEnd = UIUtil.createButton("结束公示");
                     btnEnd.setPreferredSize(new Dimension(100, 32));

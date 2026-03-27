@@ -1,23 +1,32 @@
 package com.homestead.ui;
 
+import com.homestead.entity.Application;
 import com.homestead.entity.User;
+import com.homestead.service.ApplicationService;
+import com.homestead.service.impl.ApplicationServiceImpl;
 import com.homestead.util.UIUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
+import java.util.List;
 
 public class MainFrame extends JFrame {
     private User loginUser;
     private CardLayout cardLayout;
     private JPanel contentPanel;
+    private ApplicationService appService;
+    private ApplyFrame applyFrame;          // 保存 ApplyFrame 实例
 
     public MainFrame(User user) {
         this.loginUser = user;
+        this.appService = new ApplicationServiceImpl();
         initUI();
         checkTodoReminders();
     }
 
     private void initUI() {
+        setIconImage(loadIcon());
         setTitle("全国农村宅基地管理系统");
         setSize(1300, 850);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,7 +60,7 @@ public class MainFrame extends JFrame {
         topBar.add(userPanel, BorderLayout.EAST);
         add(topBar, BorderLayout.NORTH);
 
-        // 左侧菜单（按角色分组）
+        // 左侧菜单
         JPanel leftMenuPanel = new JPanel();
         leftMenuPanel.setLayout(new BoxLayout(leftMenuPanel, BoxLayout.Y_AXIS));
         leftMenuPanel.setBackground(UIUtil.COLOR_BG);
@@ -89,7 +98,11 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(UIUtil.COLOR_BG);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        contentPanel.add(new ApplyFrame(loginUser), "apply");
+        // 创建各面板，并保存 ApplyFrame 引用
+        applyFrame = new ApplyFrame(loginUser);
+        applyFrame.setName("apply");
+        contentPanel.add(applyFrame, "apply");
+
         contentPanel.add(new ApproveFrame(loginUser), "approve");
         contentPanel.add(new AppealFrame(loginUser, false), "appeal");
         contentPanel.add(new AttachmentFrame(loginUser), "attachment");
@@ -99,11 +112,13 @@ public class MainFrame extends JFrame {
         contentPanel.add(new AppealFrame(loginUser, true), "appealAdmin");
         contentPanel.add(new StatisticsFrame(loginUser), "stats");
 
-        // 根据角色设置默认显示的卡片
+        // 根据角色设置默认卡片
         if (role.contains("村级") || role.contains("乡镇")) {
             cardLayout.show(contentPanel, "approve");
         } else {
             cardLayout.show(contentPanel, "apply");
+            // 如果是申请人，主动请求焦点
+            SwingUtilities.invokeLater(() -> applyFrame.requestFocusForInput());
         }
 
         add(contentPanel, BorderLayout.CENTER);
@@ -126,7 +141,15 @@ public class MainFrame extends JFrame {
             btn.setFocusPainted(false);
             btn.setMaximumSize(new Dimension(200, 40));
             btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-            btn.addActionListener(e -> cardLayout.show(contentPanel, item[1]));
+            btn.addActionListener(e -> {
+                cardLayout.show(contentPanel, item[1]);
+                contentPanel.revalidate();
+                contentPanel.repaint();
+
+                if ("apply".equals(item[1]) && applyFrame != null) {
+                    SwingUtilities.invokeLater(() -> applyFrame.requestFocusForInput());
+                }
+            });
             btn.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
                     btn.setBackground(new Color(230, 240, 255));
@@ -140,13 +163,20 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private Image loadIcon() {
+        URL iconURL = getClass().getResource("/images/icon/favicon.ico");
+        if (iconURL != null) {
+            return Toolkit.getDefaultToolkit().getImage(iconURL);
+        }
+        return null;
+    }
+
     private void checkTodoReminders() {
-        // 仅对审批人（村级/乡镇）显示待办提醒
         String role = loginUser.getRole();
         if (role.contains("村级") || role.contains("乡镇")) {
-            // 真实项目中应调用 Service 查询待审批数量
-            // 这里用模拟数据，实际可替换为真实查询
-            int pendingCount = 0; // 替换为 appService.getApplicationsByCurrentLevel("村级/乡镇").size()
+            String level = role.contains("村级") ? "村级" : "乡镇";
+            List<Application> list = appService.getApplicationsByCurrentLevel(level);
+            int pendingCount = (list != null) ? list.size() : 0;
             if (pendingCount > 0) {
                 JOptionPane.showMessageDialog(this,
                         "您有 " + pendingCount + " 项待审批申请，请及时处理！",

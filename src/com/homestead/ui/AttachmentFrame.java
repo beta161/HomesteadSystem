@@ -76,7 +76,6 @@ public class AttachmentFrame extends JPanel {
         table.setModel(tableModel);
         card.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // 底部按钮
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         JButton btnRefresh = UIUtil.createButton("刷新列表");
         btnRefresh.addActionListener(e -> loadAttachments());

@@ -46,4 +46,8 @@ public interface ApplicationDAO {
      * @return 更新成功返回1，失败0
      */
     int updateStatusAndLevel(Integer appId,String status,String level);
+    /**
+     * 查询所有申请
+     */
+    List<Application> findAll();
 }

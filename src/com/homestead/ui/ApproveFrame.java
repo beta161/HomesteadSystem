@@ -5,8 +5,10 @@ import com.homestead.entity.ApprovalRecord;
 import com.homestead.entity.User;
 import com.homestead.service.ApplicationService;
 import com.homestead.service.ApprovalRecordService;
+import com.homestead.service.ApprovalTimerService;
 import com.homestead.service.impl.ApplicationServiceImpl;
 import com.homestead.service.impl.ApprovalRecordServiceImpl;
+import com.homestead.service.impl.ApprovalTimerServiceImpl;
 import com.homestead.util.UIUtil;
 
 import javax.swing.*;
@@ -21,12 +23,14 @@ public class ApproveFrame extends JPanel {
     private DefaultTableModel model;
     private ApplicationService appService;
     private ApprovalRecordService recordService;
+    private ApprovalTimerService timerService;
     private JPanel stepPanel;
 
     public ApproveFrame(User user) {
         this.user = user;
         this.appService = new ApplicationServiceImpl();
         this.recordService = new ApprovalRecordServiceImpl();
+        this.timerService = new ApprovalTimerServiceImpl();
         initUI();
         loadData();
     }
@@ -38,20 +42,17 @@ public class ApproveFrame extends JPanel {
         JPanel card = UIUtil.createCardPanel(new BorderLayout());
         card.setLayout(new BorderLayout());
 
-        // 步骤条（放在顶部）
         stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
         stepPanel.setBackground(Color.WHITE);
         stepPanel.setBorder(BorderFactory.createTitledBorder("审批流程"));
         card.add(stepPanel, BorderLayout.NORTH);
 
-        // 表格（增加剩余时限列）
         model = new DefaultTableModel(new Object[]{"申请ID", "申请人ID", "面积(㎡)", "用途", "当前状态", "审批环节", "剩余时限"}, 0);
         table = UIUtil.createTable();
         table.setModel(model);
         table.getColumnModel().getColumn(4).setCellRenderer(new StatusCellRenderer());
         card.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // 操作按钮
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         JButton btnRefresh = UIUtil.createButton("刷新");
         btnRefresh.addActionListener(e -> loadData());
@@ -97,6 +98,8 @@ public class ApproveFrame extends JPanel {
             stepPanel.removeAll();
             stepPanel.add(new JLabel("暂无待审批申请"));
         }
+        revalidate();
+        repaint();
     }
 
     private void updateStepPanel(String currentLevel) {
@@ -120,36 +123,23 @@ public class ApproveFrame extends JPanel {
             lblStep.setFont(UIUtil.FONT_SMALL);
             JLabel lblStatus = new JLabel();
             switch (statuses[i]) {
-                case "completed":
-                    lblStatus.setText("✓");
-                    lblStatus.setForeground(UIUtil.COLOR_SUCCESS);
-                    break;
-                case "active":
-                    lblStatus.setText("●");
-                    lblStatus.setForeground(UIUtil.COLOR_PRIMARY);
-                    break;
-                default:
-                    lblStatus.setText("○");
-                    lblStatus.setForeground(UIUtil.COLOR_TEXT_HINT);
+                case "completed": lblStatus.setText("✓"); lblStatus.setForeground(UIUtil.COLOR_SUCCESS); break;
+                case "active": lblStatus.setText("●"); lblStatus.setForeground(UIUtil.COLOR_PRIMARY); break;
+                default: lblStatus.setText("○"); lblStatus.setForeground(UIUtil.COLOR_TEXT_HINT);
             }
             step.add(lblStatus, BorderLayout.NORTH);
             step.add(lblStep, BorderLayout.SOUTH);
             stepPanel.add(step);
-            if (i < steps.length - 1) {
-                stepPanel.add(new JLabel(" → "));
-            }
+            if (i < steps.length - 1) stepPanel.add(new JLabel(" → "));
         }
         stepPanel.revalidate();
         stepPanel.repaint();
     }
 
     private String calculateRemainingTime(Application app) {
-        // 简化：根据状态模拟剩余天数，实际应从 ApprovalTimers 表获取
-        if ("待村级审批".equals(app.getStatus())) {
-            return "剩余 5 天";
-        } else if ("待乡镇审批".equals(app.getStatus())) {
-            return "剩余 3 天";
-        }
+        // 简化模拟，实际应从 ApprovalTimers 表计算
+        if ("待村级审批".equals(app.getStatus())) return "剩余 5 天";
+        if ("待乡镇审批".equals(app.getStatus())) return "剩余 3 天";
         return "-";
     }
 
@@ -186,18 +176,26 @@ public class ApproveFrame extends JPanel {
             if ("村级".equals(app.getCurrentApprovalLevel())) {
                 newStatus = "待乡镇审批";
                 newLevel = "乡镇";
+                // 村级审批通过后，初始化乡镇审批时限（15天）
+                boolean timerInit = timerService.initApprovalTimer(appId, "乡镇", 15);
+                if (!timerInit) {
+                    System.err.println("乡镇审批时限初始化失败，申请ID = " + appId);
+                } else {
+                    System.out.println("乡镇审批时限初始化成功，申请ID = " + appId);
+                }
             } else {
                 newStatus = "已批准";
-                newLevel = "";
+                newLevel = null;
             }
         } else {
             newStatus = "已驳回";
-            newLevel = "";
+            newLevel = null;
         }
+
         boolean updateSuccess = appService.updateAppStatusAndLevel(appId, newStatus, newLevel);
         if (updateSuccess) {
             UIUtil.showInfo("审批成功！");
-            loadData(); // 刷新列表
+            loadData();
         } else {
             UIUtil.showError("审批失败！");
         }
