@@ -52,4 +52,6 @@ public interface ApplicationDAO {
     List<Application> findAll();
 
     List<Application> findByUserId(Integer userId);
+
+    List<Object[]> getMonthlyStatistics(int limit);
 }

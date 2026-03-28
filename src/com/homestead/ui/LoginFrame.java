@@ -7,17 +7,50 @@ import com.homestead.util.UIUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.net.URL;
 
 public class LoginFrame extends JFrame {
     private JTextField tfUsername;
     private JPasswordField pfPassword;
     private UserService userService;
 
+    // 轮播相关
+    private Image[] bgImages = new Image[2];
+    private int currentImageIndex = 0;
+    private Timer timer;
+
     public LoginFrame() {
         userService = new UserServiceImpl();
+        loadBackgroundImages();
         initUI();
+        startImageRotation();
+    }
+
+    private void loadBackgroundImages() {
+        String[] imagePaths = {"/images/background/1.jpg", "/images/background/2.jpg"};
+        for (int i = 0; i < imagePaths.length; i++) {
+            URL imgURL = getClass().getResource(imagePaths[i]);
+            if (imgURL != null) {
+                bgImages[i] = new ImageIcon(imgURL).getImage();
+            } else {
+                System.err.println("图片未找到：" + imagePaths[i]);
+            }
+        }
+    }
+
+    private void startImageRotation() {
+        timer = new Timer(5000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentImageIndex = (currentImageIndex + 1) % bgImages.length;
+                ((JPanel) getContentPane().getComponent(0)).repaint();
+            }
+        });
+        timer.start();
     }
 
     private void initUI() {
@@ -27,15 +60,29 @@ public class LoginFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // 左侧品牌区（渐变）
+        // 左侧品牌区（图片轮播 + 文字）
         JPanel leftPanel = new JPanel() {
+            {
+                setOpaque(false); // 透明背景，避免父类白色覆盖
+            }
+
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, UIUtil.COLOR_PRIMARY_DARK, 0, getHeight(), UIUtil.COLOR_PRIMARY);
-                g2.setPaint(gp);
+                // 绘制当前背景图片
+                if (bgImages[currentImageIndex] != null) {
+                    g2.drawImage(bgImages[currentImageIndex], 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    // 无图片时使用渐变背景
+                    GradientPaint gp = new GradientPaint(0, 0, UIUtil.COLOR_PRIMARY_DARK, 0, getHeight(), UIUtil.COLOR_PRIMARY);
+                    g2.setPaint(gp);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                }
+                // 叠加半透明黑色遮罩，提高文字可读性
+                g2.setColor(new Color(0, 0, 0, 100));
                 g2.fillRect(0, 0, getWidth(), getHeight());
+                // 不调用 super.paintComponent，避免覆盖
                 g2.dispose();
             }
         };
@@ -69,13 +116,13 @@ public class LoginFrame extends JFrame {
         gbcRight.insets = new Insets(15, 30, 15, 30);
         gbcRight.anchor = GridBagConstraints.CENTER;
 
-        JLabel lblWelcome = new JLabel("欢迎登录");
+        JLabel lblWelcome = new JLabel("登录");
         lblWelcome.setFont(UIUtil.FONT_TITLE);
         lblWelcome.setForeground(UIUtil.COLOR_PRIMARY);
         gbcRight.gridx = 0; gbcRight.gridy = 0; gbcRight.gridwidth = 2;
         rightPanel.add(lblWelcome, gbcRight);
 
-        // 用户名
+        // 用户名（原手机号/邮箱改为用户名）
         JLabel lblUser = UIUtil.createLabel("用户名", false);
         gbcRight.gridy = 1; gbcRight.gridwidth = 1;
         gbcRight.anchor = GridBagConstraints.WEST;
@@ -133,7 +180,7 @@ public class LoginFrame extends JFrame {
         btnRegister.setContentAreaFilled(false);
         btnRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRegister.addActionListener(e -> new RegisterFrame().setVisible(true));
-        gbcRight.gridy = 6;  // 下一行
+        gbcRight.gridy = 6;
         rightPanel.add(btnRegister, gbcRight);
 
         add(leftPanel, BorderLayout.WEST);
@@ -149,6 +196,7 @@ public class LoginFrame extends JFrame {
         }
         User user = userService.login(username, pwd);
         if (user != null) {
+            timer.stop(); // 停止轮播
             new MainFrame(user).setVisible(true);
             this.dispose();
         } else {
@@ -157,7 +205,7 @@ public class LoginFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        UIUtil.enableAntiAliasing(); // 开启抗锯齿
+        UIUtil.enableAntiAliasing();
         SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
     }
 }

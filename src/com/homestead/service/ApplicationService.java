@@ -52,4 +52,7 @@ public interface ApplicationService {
 
     List<Application> getApplicationsByUserId(Integer userId);
 
+    List<Object[]> getMonthlyStatistics(int limit);
+
+
 }

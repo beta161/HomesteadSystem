@@ -185,4 +185,29 @@ public class ApplicationDAOImpl extends BaseDAO implements ApplicationDAO {
             }
         }, userId);
     }
+
+    @Override
+    public List<Object[]> getMonthlyStatistics(int limit) {
+        String sql = "SELECT DATE_FORMAT(apply_time, '%Y-%m') AS month, COUNT(*) AS total, " +
+                "SUM(CASE WHEN status = '已批准' THEN 1 ELSE 0 END) AS approved, " +
+                "SUM(CASE WHEN status = '已驳回' THEN 1 ELSE 0 END) AS rejected " +
+                "FROM Applications GROUP BY month ORDER BY month DESC LIMIT ?";
+        return query(sql, new ResultSetHandler<List<Object[]>>() {
+            @Override
+            public List<Object[]> handle(ResultSet rs) throws SQLException {
+                List<Object[]> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getString("month"),
+                            rs.getInt("total"),
+                            rs.getInt("approved"),
+                            rs.getInt("rejected")
+                    });
+                }
+                return list;
+            }
+        }, limit);
+    }
+
+
 }

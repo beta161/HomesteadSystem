@@ -98,4 +98,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (userId == null) return null;
         return applicationDAO.findByUserId(userId);
     }
+
+
+    @Override
+    public List<Object[]> getMonthlyStatistics(int limit) {
+        return applicationDAO.getMonthlyStatistics(limit);
+    }
+
 }
