@@ -92,4 +92,10 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<Application> getAllApplications() {
         return applicationDAO.findAll();
     }
+
+    @Override
+    public List<Application> getApplicationsByUserId(Integer userId) {
+        if (userId == null) return null;
+        return applicationDAO.findByUserId(userId);
+    }
 }

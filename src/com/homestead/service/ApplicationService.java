@@ -49,4 +49,7 @@ public interface ApplicationService {
 
 
     List<Application> getAllApplications();
+
+    List<Application> getApplicationsByUserId(Integer userId);
+
 }

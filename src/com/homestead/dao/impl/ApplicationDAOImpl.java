@@ -159,4 +159,30 @@ public class ApplicationDAOImpl extends BaseDAO implements ApplicationDAO {
             }
         });
     }
+
+    @Override
+    public List<Application> findByUserId(Integer userId) {
+        String sql = "SELECT app_id AS appId, user_id AS userId, plot_area AS plotArea, purpose, status, " +
+                "apply_time AS applyTime, attach_count AS attachCount, current_approval_level AS currentApprovalLevel " +
+                "FROM Applications WHERE user_id = ?";
+        return query(sql, new ResultSetHandler<List<Application>>() {
+            @Override
+            public List<Application> handle(ResultSet rs) throws SQLException {
+                List<Application> list = new ArrayList<>();
+                while (rs.next()) {
+                    Application app = new Application();
+                    app.setAppId(rs.getInt("appId"));
+                    app.setUserId(rs.getInt("userId"));
+                    app.setPlotArea(rs.getDouble("plotArea"));
+                    app.setPurpose(rs.getString("purpose"));
+                    app.setStatus(rs.getString("status"));
+                    app.setApplyTime(rs.getTimestamp("applyTime"));
+                    app.setAttachCount(rs.getInt("attachCount"));
+                    app.setCurrentApprovalLevel(rs.getString("currentApprovalLevel"));
+                    list.add(app);
+                }
+                return list;
+            }
+        }, userId);
+    }
 }

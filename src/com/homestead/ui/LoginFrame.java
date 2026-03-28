@@ -125,6 +125,17 @@ public class LoginFrame extends JFrame {
         gbcRight.gridy = 5; gbcRight.gridwidth = 2; gbcRight.anchor = GridBagConstraints.CENTER;
         rightPanel.add(btnLogin, gbcRight);
 
+        // 注册按钮
+        JButton btnRegister = new JButton("注册账号");
+        btnRegister.setFont(UIUtil.FONT_SMALL);
+        btnRegister.setForeground(UIUtil.COLOR_PRIMARY);
+        btnRegister.setBorderPainted(false);
+        btnRegister.setContentAreaFilled(false);
+        btnRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRegister.addActionListener(e -> new RegisterFrame().setVisible(true));
+        gbcRight.gridy = 6;  // 下一行
+        rightPanel.add(btnRegister, gbcRight);
+
         add(leftPanel, BorderLayout.WEST);
         add(rightPanel, BorderLayout.CENTER);
     }

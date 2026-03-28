@@ -49,4 +49,17 @@ public class UserServiceImpl implements UserService {
         //校验角色
         return user != null && role.equals(user.getRole());
     }
+
+    @Override
+    public boolean register(User user) {
+        // 检查用户名是否已存在
+        User existing = userDAO.findByUsername(user.getUsername()); // 需在DAO添加此方法
+        if (existing != null) {
+            return false;
+        }
+        int result = userDAO.addUser(user);
+        return result > 0;
+    }
+
+
 }

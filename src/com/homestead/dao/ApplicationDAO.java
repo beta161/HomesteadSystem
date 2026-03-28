@@ -50,4 +50,6 @@ public interface ApplicationDAO {
      * 查询所有申请
      */
     List<Application> findAll();
+
+    List<Application> findByUserId(Integer userId);
 }

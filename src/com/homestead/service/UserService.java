@@ -29,4 +29,6 @@ public interface UserService {
      * @return true:有权限，false:无权限
      */
     boolean checkUserRole(Integer userId, String role);
+
+    boolean register(User user);
 }

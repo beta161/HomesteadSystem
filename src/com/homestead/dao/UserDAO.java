@@ -20,4 +20,7 @@ public interface UserDAO {
      */
     User findById(Integer userId);
 
+    User findByUsername(String username);
+    int addUser(User user);
+
 }

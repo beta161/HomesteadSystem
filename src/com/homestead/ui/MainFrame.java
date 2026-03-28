@@ -16,7 +16,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel contentPanel;
     private ApplicationService appService;
-    private ApplyFrame applyFrame;          // 保存 ApplyFrame 实例
+    private ApplyFrame applyFrame;          // 申请登记面板引用（用于焦点处理）
 
     public MainFrame(User user) {
         this.loginUser = user;
@@ -71,6 +71,7 @@ public class MainFrame extends JFrame {
 
         if ("申请人".equals(role)) {
             addMenuGroup(leftMenuPanel, "宅基地申请", new String[][]{{"申请登记", "apply"}, {"附件管理", "attachment"}});
+            addMenuGroup(leftMenuPanel, "我的申请", new String[][]{{"查看申请", "myApps"}});
             addMenuGroup(leftMenuPanel, "申诉反馈", new String[][]{{"申诉处理", "appeal"}});
         } else if (role.contains("村级") || role.contains("乡镇")) {
             addMenuGroup(leftMenuPanel, "审批工作台", new String[][]{{"审批管理", "approve"}});
@@ -98,12 +99,13 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(UIUtil.COLOR_BG);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 创建各面板，并保存 ApplyFrame 引用
+        // 创建各面板
         applyFrame = new ApplyFrame(loginUser);
         applyFrame.setName("apply");
         contentPanel.add(applyFrame, "apply");
 
         contentPanel.add(new ApproveFrame(loginUser), "approve");
+        contentPanel.add(new MyApplicationsFrame(loginUser), "myApps");
         contentPanel.add(new AppealFrame(loginUser, false), "appeal");
         contentPanel.add(new AttachmentFrame(loginUser), "attachment");
         contentPanel.add(new LandRegistrationFrame(loginUser), "registration");
@@ -117,7 +119,6 @@ public class MainFrame extends JFrame {
             cardLayout.show(contentPanel, "approve");
         } else {
             cardLayout.show(contentPanel, "apply");
-            // 如果是申请人，主动请求焦点
             SwingUtilities.invokeLater(() -> applyFrame.requestFocusForInput());
         }
 
@@ -145,7 +146,6 @@ public class MainFrame extends JFrame {
                 cardLayout.show(contentPanel, item[1]);
                 contentPanel.revalidate();
                 contentPanel.repaint();
-
                 if ("apply".equals(item[1]) && applyFrame != null) {
                     SwingUtilities.invokeLater(() -> applyFrame.requestFocusForInput());
                 }
