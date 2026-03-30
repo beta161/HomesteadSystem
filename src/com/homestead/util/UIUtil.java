@@ -27,10 +27,10 @@ public class UIUtil {
     public static final Color COLOR_TEXT_HINT = new Color(150, 150, 150);
 
     // 字体
-    public static final Font FONT_TITLE = new Font("微软雅黑", Font.BOLD, 20);
-    public static final Font FONT_SUBTITLE = new Font("微软雅黑", Font.BOLD, 16);
-    public static final Font FONT_BODY = new Font("微软雅黑", Font.PLAIN, 15);
-    public static final Font FONT_SMALL = new Font("微软雅黑", Font.PLAIN, 13);
+    public static final Font FONT_TITLE = new Font("微软雅黑", Font.BOLD, 22);
+    public static final Font FONT_SUBTITLE = new Font("微软雅黑", Font.BOLD, 18);
+    public static final Font FONT_BODY = new Font("微软雅黑", Font.PLAIN, 17);
+    public static final Font FONT_SMALL = new Font("微软雅黑", Font.PLAIN, 15);
 
     public static final int CORNER_RADIUS = 8;
 

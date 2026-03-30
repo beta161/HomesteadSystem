@@ -16,7 +16,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel contentPanel;
     private ApplicationService appService;
-    private ApplyFrame applyFrame;          // 申请登记面板引用（用于焦点处理）
+    private ApplyFrame applyFrame;
 
     public MainFrame(User user) {
         this.loginUser = user;
@@ -35,15 +35,43 @@ public class MainFrame extends JFrame {
 
         // 顶部渐变导航栏
         JPanel topBar = UIUtil.createGradientHeader();
-        JLabel lblSystem = new JLabel("🏠 全国农村宅基地管理系统");
+
+        // 左侧部分：图标 + 系统名称
+        // 左侧部分：图标 + 系统名称，使用 GridBagLayout 实现垂直居中
+        JPanel leftTop = new JPanel(new GridBagLayout());
+        leftTop.setOpaque(false);
+
+        GridBagConstraints gbcLeft = new GridBagConstraints();
+        gbcLeft.insets = new Insets(0, 5, 0, 5);
+        gbcLeft.anchor = GridBagConstraints.WEST;
+        gbcLeft.fill = GridBagConstraints.VERTICAL; // 确保垂直填充
+
+        // 小房子图标
+        JLabel lblIcon = new JLabel();
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/images/icon/home.png"));
+            Image scaled = icon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+            lblIcon.setIcon(new ImageIcon(scaled));
+        } catch (Exception e) {
+            lblIcon.setText("🏠");
+            lblIcon.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 28));
+            lblIcon.setForeground(Color.WHITE);
+        }
+        leftTop.add(lblIcon, gbcLeft);
+
+        // 系统名称
+        JLabel lblSystem = new JLabel("全国农村宅基地管理系统");
         lblSystem.setFont(new Font("微软雅黑", Font.BOLD, 20));
         lblSystem.setForeground(Color.WHITE);
-        lblSystem.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
-        topBar.add(lblSystem, BorderLayout.WEST);
+        gbcLeft.gridx = 1;
+        leftTop.add(lblSystem, gbcLeft);
 
+        topBar.add(leftTop, BorderLayout.WEST);
+
+        // 右侧用户信息
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         userPanel.setOpaque(false);
-        JLabel lblUser = new JLabel("欢迎，" + loginUser.getUsername() + " (" + loginUser.getRole() + ")");
+        JLabel lblUser = new JLabel("欢迎，" + loginUser.getUsername() + " (" + loginUser.getRole() + ") [ID:" + loginUser.getUserId() + "]");
         lblUser.setFont(UIUtil.FONT_BODY);
         lblUser.setForeground(Color.WHITE);
         JButton btnLogout = UIUtil.createButton("退出");
@@ -99,7 +127,6 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(UIUtil.COLOR_BG);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 创建各面板
         applyFrame = new ApplyFrame(loginUser);
         applyFrame.setName("apply");
         contentPanel.add(applyFrame, "apply");
@@ -114,7 +141,6 @@ public class MainFrame extends JFrame {
         contentPanel.add(new AppealFrame(loginUser, true), "appealAdmin");
         contentPanel.add(new StatisticsFrame(loginUser), "stats");
 
-        // 根据角色设置默认卡片
         if (role.contains("村级") || role.contains("乡镇")) {
             cardLayout.show(contentPanel, "approve");
         } else {

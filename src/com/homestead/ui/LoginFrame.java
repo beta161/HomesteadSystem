@@ -44,13 +44,11 @@ public class LoginFrame extends JFrame {
             URL url = getClass().getResource(classpathPaths[i]);
             if (url != null) {
                 img = new ImageIcon(url).getImage();
-                System.out.println("从类路径加载图片成功：" + classpathPaths[i]);
             } else {
                 // 2. 尝试从文件系统加载（相对于工作目录）
                 File file = new File(filePaths[i]);
                 if (file.exists()) {
                     img = new ImageIcon(file.getAbsolutePath()).getImage();
-                    System.out.println("从文件系统加载图片成功：" + file.getAbsolutePath());
                 } else {
                     System.err.println("图片未找到（类路径和文件系统均未找到）：" + classpathPaths[i] + " / " + filePaths[i]);
                 }
@@ -222,8 +220,13 @@ public class LoginFrame extends JFrame {
     }
 
     public static void main(String[] args) {
+
+        // 开启字体抗锯齿，解决模糊问题
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+        System.setProperty("sun.java2d.uiScale", "1.0");
+
         UIUtil.enableAntiAliasing();
         SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
-        System.out.println("当前工作目录：" + System.getProperty("user.dir"));
     }
 }
