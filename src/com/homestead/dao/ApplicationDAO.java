@@ -54,4 +54,22 @@ public interface ApplicationDAO {
     List<Application> findByUserId(Integer userId);
 
     List<Object[]> getMonthlyStatistics(int limit);
+
+    /**
+     * 根据审批环节和关键字（申请ID或申请人ID）分页查询申请列表
+     * @param level 审批环节（村级/乡镇），若为null则不限制
+     * @param keyword 关键字（申请ID或申请人ID的模糊匹配），可为null
+     * @param offset 起始索引（从0开始）
+     * @param limit 每页数量
+     * @return 申请列表
+     */
+    List<Application> findByCurrentLevelWithPage(String level, String keyword, int offset, int limit);
+
+    /**
+     * 根据审批环节和关键字查询总记录数
+     * @param level 审批环节（村级/乡镇），若为null则不限制
+     * @param keyword 关键字（申请ID或申请人ID的模糊匹配），可为null
+     * @return 总记录数
+     */
+    int countByCurrentLevel(String level, String keyword);
 }

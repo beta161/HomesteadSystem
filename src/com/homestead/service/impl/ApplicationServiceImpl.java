@@ -105,4 +105,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applicationDAO.getMonthlyStatistics(limit);
     }
 
+    @Override
+    public List<Application> getApplicationsByCurrentLevelWithPage(String level, String keyword, int pageNum, int pageSize) {
+        if (pageNum < 1) pageNum = 1;
+        int offset = (pageNum - 1) * pageSize;
+        return applicationDAO.findByCurrentLevelWithPage(level, keyword, offset, pageSize);
+    }
+
+    @Override
+    public int countApplicationsByCurrentLevel(String level, String keyword) {
+        return applicationDAO.countByCurrentLevel(level, keyword);
+    }
+
 }

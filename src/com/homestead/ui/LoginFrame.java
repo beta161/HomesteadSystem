@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.File;
 import java.net.URL;
 
 public class LoginFrame extends JFrame {
@@ -30,15 +31,31 @@ public class LoginFrame extends JFrame {
         startImageRotation();
     }
 
+    /**
+     * 加载背景图片：先尝试从类路径加载，失败则从文件系统加载
+     */
     private void loadBackgroundImages() {
-        String[] imagePaths = {"/images/background/1.jpg", "/images/background/2.jpg"};
-        for (int i = 0; i < imagePaths.length; i++) {
-            URL imgURL = getClass().getResource(imagePaths[i]);
-            if (imgURL != null) {
-                bgImages[i] = new ImageIcon(imgURL).getImage();
+        String[] classpathPaths = {"/images/background/1.jpg", "/images/background/2.jpg"};
+        String[] filePaths = {"images/background/1.jpg", "images/background/2.jpg"};
+
+        for (int i = 0; i < classpathPaths.length; i++) {
+            Image img = null;
+            // 1. 尝试从类路径加载
+            URL url = getClass().getResource(classpathPaths[i]);
+            if (url != null) {
+                img = new ImageIcon(url).getImage();
+                System.out.println("从类路径加载图片成功：" + classpathPaths[i]);
             } else {
-                System.err.println("图片未找到：" + imagePaths[i]);
+                // 2. 尝试从文件系统加载（相对于工作目录）
+                File file = new File(filePaths[i]);
+                if (file.exists()) {
+                    img = new ImageIcon(file.getAbsolutePath()).getImage();
+                    System.out.println("从文件系统加载图片成功：" + file.getAbsolutePath());
+                } else {
+                    System.err.println("图片未找到（类路径和文件系统均未找到）：" + classpathPaths[i] + " / " + filePaths[i]);
+                }
             }
+            bgImages[i] = img;
         }
     }
 
@@ -122,7 +139,7 @@ public class LoginFrame extends JFrame {
         gbcRight.gridx = 0; gbcRight.gridy = 0; gbcRight.gridwidth = 2;
         rightPanel.add(lblWelcome, gbcRight);
 
-        // 用户名（原手机号/邮箱改为用户名）
+        // 用户名
         JLabel lblUser = UIUtil.createLabel("用户名", false);
         gbcRight.gridy = 1; gbcRight.gridwidth = 1;
         gbcRight.anchor = GridBagConstraints.WEST;
@@ -207,5 +224,6 @@ public class LoginFrame extends JFrame {
     public static void main(String[] args) {
         UIUtil.enableAntiAliasing();
         SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
+        System.out.println("当前工作目录：" + System.getProperty("user.dir"));
     }
 }

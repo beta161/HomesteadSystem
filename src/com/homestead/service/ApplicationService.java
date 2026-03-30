@@ -54,5 +54,8 @@ public interface ApplicationService {
 
     List<Object[]> getMonthlyStatistics(int limit);
 
+    List<Application> getApplicationsByCurrentLevelWithPage(String level, String keyword, int pageNum, int pageSize);
+    int countApplicationsByCurrentLevel(String level, String keyword);
+
 
 }

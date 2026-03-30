@@ -209,5 +209,75 @@ public class ApplicationDAOImpl extends BaseDAO implements ApplicationDAO {
         }, limit);
     }
 
+    @Override
+    public List<Application> findByCurrentLevelWithPage(String level, String keyword, int offset, int limit) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT app_id AS appId, user_id AS userId, plot_area AS plotArea, purpose, status, " +
+                        "apply_time AS applyTime, attach_count AS attachCount, current_approval_level AS currentApprovalLevel " +
+                        "FROM Applications WHERE 1=1 "
+        );
+        List<Object> params = new ArrayList<>();
+
+        if (level != null && !level.isEmpty()) {
+            sql.append(" AND current_approval_level = ?");
+            params.add(level);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            // 支持按申请ID或申请人ID模糊查询（注意：app_id是整数，需转换为字符串）
+            sql.append(" AND (CAST(app_id AS CHAR) LIKE ? OR CAST(user_id AS CHAR) LIKE ?)");
+            params.add("%" + keyword + "%");
+            params.add("%" + keyword + "%");
+        }
+        sql.append(" ORDER BY apply_time DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        return query(sql.toString(), new ResultSetHandler<List<Application>>() {
+            @Override
+            public List<Application> handle(ResultSet rs) throws SQLException {
+                List<Application> list = new ArrayList<>();
+                while (rs.next()) {
+                    Application app = new Application();
+                    app.setAppId(rs.getInt("appId"));
+                    app.setUserId(rs.getInt("userId"));
+                    app.setPlotArea(rs.getDouble("plotArea"));
+                    app.setPurpose(rs.getString("purpose"));
+                    app.setStatus(rs.getString("status"));
+                    app.setApplyTime(rs.getTimestamp("applyTime"));
+                    app.setAttachCount(rs.getInt("attachCount"));
+                    app.setCurrentApprovalLevel(rs.getString("currentApprovalLevel"));
+                    list.add(app);
+                }
+                return list;
+            }
+        }, params.toArray());
+    }
+
+    @Override
+    public int countByCurrentLevel(String level, String keyword) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Applications WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (level != null && !level.isEmpty()) {
+            sql.append(" AND current_approval_level = ?");
+            params.add(level);
+        }
+        if (keyword != null && !keyword.isEmpty()) {
+            sql.append(" AND (CAST(app_id AS CHAR) LIKE ? OR CAST(user_id AS CHAR) LIKE ?)");
+            params.add("%" + keyword + "%");
+            params.add("%" + keyword + "%");
+        }
+
+        return query(sql.toString(), new ResultSetHandler<Integer>() {
+            @Override
+            public Integer handle(ResultSet rs) throws SQLException {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+                return 0;
+            }
+        }, params.toArray());
+    }
+
 
 }

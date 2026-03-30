@@ -26,6 +26,16 @@ public class ApproveFrame extends JPanel {
     private ApprovalTimerService timerService;
     private JPanel stepPanel;
 
+    // 分页和搜索相关
+    private JTextField tfKeyword;
+    private JButton btnSearch;
+    private JButton btnFirst, btnPrev, btnNext, btnLast;
+    private JLabel lblPageInfo;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+    private String currentKeyword = "";
+
     public ApproveFrame(User user) {
         this.user = user;
         this.appService = new ApplicationServiceImpl();
@@ -42,20 +52,79 @@ public class ApproveFrame extends JPanel {
         JPanel card = UIUtil.createCardPanel(new BorderLayout());
         card.setLayout(new BorderLayout());
 
+        // ==================== 顶部区域（搜索栏 + 步骤条）====================
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.Y_AXIS));
+        northPanel.setBackground(Color.WHITE);
+
+        // ----- 搜索和分页栏 -----
+        JPanel searchPaginationPanel = new JPanel(new BorderLayout());
+        searchPaginationPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        searchPaginationPanel.setBackground(Color.WHITE);
+
+        // 左侧：搜索框 + 搜索按钮
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        searchPanel.setBackground(Color.WHITE);
+        searchPanel.add(new JLabel("关键字："));
+        tfKeyword = UIUtil.createTextField();
+        tfKeyword.setPreferredSize(new Dimension(180, 30));
+        searchPanel.add(tfKeyword);
+        btnSearch = UIUtil.createButton("搜索");
+        btnSearch.addActionListener(e -> {
+            currentPage = 1;
+            currentKeyword = tfKeyword.getText().trim();
+            loadData();
+        });
+        searchPanel.add(btnSearch);
+        searchPaginationPanel.add(searchPanel, BorderLayout.WEST);
+
+        // 右侧：分页控件
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        paginationPanel.setBackground(Color.WHITE);
+        btnFirst = UIUtil.createButton("首页");
+        btnPrev = UIUtil.createButton("上一页");
+        lblPageInfo = new JLabel("第1页 / 共1页");
+        lblPageInfo.setFont(UIUtil.FONT_SMALL);
+        btnNext = UIUtil.createButton("下一页");
+        btnLast = UIUtil.createButton("末页");
+
+        btnFirst.addActionListener(e -> goToPage(1));
+        btnPrev.addActionListener(e -> goToPage(currentPage - 1));
+        btnNext.addActionListener(e -> goToPage(currentPage + 1));
+        btnLast.addActionListener(e -> goToPage(totalPages));
+
+        paginationPanel.add(btnFirst);
+        paginationPanel.add(btnPrev);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNext);
+        paginationPanel.add(btnLast);
+        searchPaginationPanel.add(paginationPanel, BorderLayout.EAST);
+
+        northPanel.add(searchPaginationPanel);
+
+        // ----- 步骤条 -----
         stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
         stepPanel.setBackground(Color.WHITE);
         stepPanel.setBorder(BorderFactory.createTitledBorder("审批流程"));
-        card.add(stepPanel, BorderLayout.NORTH);
+        northPanel.add(stepPanel);
 
+        card.add(northPanel, BorderLayout.NORTH);
+
+        // ==================== 表格 ====================
         model = new DefaultTableModel(new Object[]{"申请ID", "申请人ID", "面积(㎡)", "用途", "当前状态", "审批环节", "剩余时限"}, 0);
         table = UIUtil.createTable();
         table.setModel(model);
         table.getColumnModel().getColumn(4).setCellRenderer(new StatusCellRenderer());
         card.add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // ==================== 底部按钮 ====================
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         JButton btnRefresh = UIUtil.createButton("刷新");
-        btnRefresh.addActionListener(e -> loadData());
+        btnRefresh.addActionListener(e -> {
+            currentPage = 1;
+            currentKeyword = tfKeyword.getText().trim();
+            loadData();
+        });
         JButton btnApprove = UIUtil.createButton("通过");
         btnApprove.addActionListener(e -> approve(true));
         JButton btnReject = UIUtil.createButton("驳回");
@@ -68,17 +137,45 @@ public class ApproveFrame extends JPanel {
         add(card);
     }
 
+    /**
+     * 跳转到指定页
+     */
+    private void goToPage(int page) {
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        if (page == currentPage) return;
+        currentPage = page;
+        loadData();
+    }
+
+    /**
+     * 加载当前页数据（带分页和搜索）
+     */
     private void loadData() {
         model.setRowCount(0);
         String role = user.getRole();
-        List<Application> list;
+        String level = null;
         if (role.contains("村级")) {
-            list = appService.getApplicationsByCurrentLevel("村级");
+            level = "村级";
         } else if (role.contains("乡镇")) {
-            list = appService.getApplicationsByCurrentLevel("乡镇");
-        } else {
-            list = null;
+            level = "乡镇";
         }
+
+        // 查询总记录数
+        int totalRecords = appService.countApplicationsByCurrentLevel(level, currentKeyword);
+        if (totalRecords == 0) {
+            stepPanel.removeAll();
+            stepPanel.add(new JLabel("暂无待审批申请"));
+            totalPages = 1;
+            updatePaginationState();
+            return;
+        }
+
+        totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        // 查询当前页数据
+        List<Application> list = appService.getApplicationsByCurrentLevelWithPage(level, currentKeyword, currentPage, pageSize);
 
         if (list != null && !list.isEmpty()) {
             updateStepPanel(list.get(0).getCurrentApprovalLevel());
@@ -98,8 +195,21 @@ public class ApproveFrame extends JPanel {
             stepPanel.removeAll();
             stepPanel.add(new JLabel("暂无待审批申请"));
         }
+
+        updatePaginationState();
         revalidate();
         repaint();
+    }
+
+    /**
+     * 更新分页按钮状态
+     */
+    private void updatePaginationState() {
+        lblPageInfo.setText("第" + currentPage + "页 / 共" + totalPages + "页");
+        btnFirst.setEnabled(currentPage > 1);
+        btnPrev.setEnabled(currentPage > 1);
+        btnNext.setEnabled(currentPage < totalPages);
+        btnLast.setEnabled(currentPage < totalPages);
     }
 
     private void updateStepPanel(String currentLevel) {
